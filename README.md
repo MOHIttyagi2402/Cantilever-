@@ -26,15 +26,12 @@ def search_books(books, query):
     results = [book for book in books if query in book['title'].lower()]
     return results
 
-# Example usage
 url = 'http://books.toscrape.com/'
 all_books = get_books(url)
 
-# Prompt user for search keyword
 search_query = input("Enter keyword to search for a book title: ")
 matching_books = search_books(all_books, search_query)
 
-# Display results
 if matching_books:
     print(f"\nFound {len(matching_books)} matching books:\n")
     for book in matching_books:
