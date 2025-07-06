@@ -1,15 +1,9 @@
 # Cantilever-
-import requests
 from bs4 import BeautifulSoup
-
-BASE_URL = "http://books.toscrape.com/catalogue/page-1.html"
+import requests
 
 def get_books(url):
     response = requests.get(url)
-    if response.status_code != 200:
-        print(f"Failed to retrieve page: {response.status_code}")
-        return []
-
     soup = BeautifulSoup(response.text, 'html.parser')
     books = []
 
@@ -18,7 +12,7 @@ def get_books(url):
         title = book.h3.a['title']
         price = book.select_one('.price_color').text
         availability = book.select_one('.availability').text.strip()
-        
+
         books.append({
             'title': title,
             'price': price,
@@ -27,7 +21,25 @@ def get_books(url):
 
     return books
 
-if __name__ == '__main__':
-    books = get_books(BASE_URL)
-    for idx, book in enumerate(books, 1):
-        print(f"{idx}. {book['title']} - {book['price']} ({book['availability']})")
+def search_books(books, query):
+    query = query.lower()
+    results = [book for book in books if query in book['title'].lower()]
+    return results
+
+# Example usage
+url = 'http://books.toscrape.com/'
+all_books = get_books(url)
+
+# Prompt user for search keyword
+search_query = input("Enter keyword to search for a book title: ")
+matching_books = search_books(all_books, search_query)
+
+# Display results
+if matching_books:
+    print(f"\nFound {len(matching_books)} matching books:\n")
+    for book in matching_books:
+        print(f"Title: {book['title']}\nPrice: {book['price']}\nAvailability: {book['availability']}\n")
+else:
+    print("No books found with that keyword.")
+
+           
