@@ -37,7 +37,7 @@ def search_books(books, query):
     query = query.lower()
     return [book for book in books if query in book['title'].lower()]
 
-# Example usage
+
 if __name__ == '__main__':
     url = 'http://books.toscrape.com/'
     all_books = get_books(url)
