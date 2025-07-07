@@ -1,50 +1,69 @@
-# Cantilever-
-from bs4 import BeautifulSoup
-import requests
+# Cantilever
+// src/App.tsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
-def get_books(url):
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()  # Raise error for bad responses
-    except requests.RequestException as e:
-        print(f"Error fetching URL: {e}")
-        return []
+function App() {
+  const [products, setProducts] = useState([]);
+  const [query, setQuery] = useState('');
+  const [cart, setCart] = useState([]);
 
-    soup = BeautifulSoup(response.text, 'html.parser')
-    books = []
+  useEffect(() => {
+    axios.get('/api/products').then((res) => setProducts(res.data));
+  }, []);
 
-    for book in soup.select('article.product_pod'):
-        # Safely extract title
-        title_tag = book.h3.a
-        title = title_tag['title'] if title_tag and 'title' in title_tag.attrs else 'No title'
+  const handleAddToCart = (product) => {
+    setCart([...cart, product]);
+  };
 
-        # Extract price and availability safely
-        price_tag = book.select_one('.price_color')
-        price = price_tag.text.strip() if price_tag else 'No price info'
+  const handleRemoveFromCart = (productId) => {
+    setCart(cart.filter((p) => p._id !== productId));
+  };
 
-        availability_tag = book.select_one('.availability')
-        availability = availability_tag.text.strip() if availability_tag else 'No availability info'
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(query.toLowerCase())
+  );
 
-        books.append({
-            'title': title,
-            'price': price,
-            'availability': availability
-        })
+  return (
+    <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="md:col-span-2">
+        <Input
+          placeholder="Search products..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="mb-4"
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {filteredProducts.map((product) => (
+            <Card key={product._id} className="p-2">
+              <CardContent>
+                <img src={product.image} alt={product.name} className="w-full h-32 object-cover rounded" />
+                <h2 className="text-lg font-bold mt-2">{product.name}</h2>
+                <p className="text-sm text-gray-500">${product.price}</p>
+                <Button onClick={() => handleAddToCart(product)} className="mt-2 w-full">Add to Cart</Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+      <div className="bg-white rounded-xl p-4 shadow-md">
+        <h2 className="text-xl font-semibold mb-4">Cart</h2>
+        {cart.map((item) => (
+          <div key={item._id} className="flex justify-between items-center mb-2">
+            <span>{item.name}</span>
+            <Button size="sm" variant="destructive" onClick={() => handleRemoveFromCart(item._id)}>Remove</Button>
+          </div>
+        ))}
+        <p className="mt-4 font-bold">Total: ${cart.reduce((acc, item) => acc + item.price, 0)}</p>
+      </div>
+    </div>
+  );
+}
 
-    return books
-
-def search_books(books, query):
-    query = query.lower()
-    return [book for book in books if query in book['title'].lower()]
-
-
-if __name__ == '__main__':
-    url = 'http://books.toscrape.com/'
-    all_books = get_books(url)
-
-    if all_books:
-        search_query = input("Enter keyword to search for a book title: ")
-        matching_books = search_books(all_books, search_query)
+export default App;
 
         if matching_books:
             print(f"\nFound {len(matching_books)} matching books:\n")
